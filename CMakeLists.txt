@@ -11,5 +11,5 @@ set(CMAKE_AUTORCC ON)
 
 find_package(Qt5Widgets REQUIRED)
 
-add_executable(webrtc_cpp_demo main.cpp)
+add_executable(webrtc_cpp_demo main.cpp settings.cpp settings.h settings.ui)
 target_link_libraries(webrtc_cpp_demo Qt5::Widgets)
