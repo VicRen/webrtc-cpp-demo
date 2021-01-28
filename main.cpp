@@ -17,10 +17,6 @@ using namespace vic::rtc;
 
 int main(int argc, char *argv[]) {
     ::rtc::ThreadManager::Instance()->WrapCurrentThread();
-    auto server = ::rtc::ThreadManager::Instance()->CurrentThread()->socketserver();
-    if (server) {
-        std::cout << "------->socket server exists" << std::endl;
-    }
     ThreadManager::instance()->init();
 
     QApplication app(argc, argv);
