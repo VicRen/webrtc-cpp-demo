@@ -6,9 +6,23 @@
 #include <QSpinBox>
 #include <QPushButton>
 #include <QWidget>
-#include "settings.h"
+#include <iostream>
+#include <memory>
 
-int main(int argc, char *argv []) {
+#include "settings.h"
+#include "ThreadManager.h"
+#include "rtc_base/thread.h"
+
+using namespace vic::rtc;
+
+int main(int argc, char *argv[]) {
+    ::rtc::ThreadManager::Instance()->WrapCurrentThread();
+    auto server = ::rtc::ThreadManager::Instance()->CurrentThread()->socketserver();
+    if (server) {
+        std::cout << "------->socket server exists" << std::endl;
+    }
+    ThreadManager::instance()->init();
+
     QApplication app(argc, argv);
 
     auto window = new QWidget;
@@ -17,10 +31,21 @@ int main(int argc, char *argv []) {
     spinBox->setRange(0, 100);
     auto slider = new QSlider;
     slider->setRange(0, 100);
-    QObject::connect(spinBox, QOverload<int>::of(&QSpinBox::valueChanged), slider, &QSlider::setValue);
+    QObject::connect(spinBox, QOverload<int>::of(&QSpinBox::valueChanged), slider,
+                     &QSlider::setValue);
     QObject::connect(slider, &QSlider::valueChanged, spinBox, &QSpinBox::setValue);
 
     auto setting = new settings(window);
+
+    ::rtc::ThreadManager::Instance()->CurrentThread()->PostTask(RTC_FROM_HERE, [](){
+        std::cout << "------->Post Task-----> Current Thread: "
+                  << ::rtc::ThreadManager::Instance()->CurrentThread()->name() << std::endl;
+    });
+    ThreadManager::instance()->thread(ThreadName::SERVICE)->PostTask(RTC_FROM_HERE, [setting]() {
+        std::cout << "------->Post Task 0-----> Current Thread: "
+                  << ::rtc::ThreadManager::Instance()->CurrentThread()->name() << std::endl;
+        setting->onCallback();
+    });
 
     auto button = new QPushButton;
     button->setText("Settings");
@@ -31,7 +56,7 @@ int main(int argc, char *argv []) {
     layout->addRow("slider:", slider);
     layout->addRow("button", button);
     window->setLayout(layout);
-    window->show();
+//    window->show();
 
     return app.exec();
 }
