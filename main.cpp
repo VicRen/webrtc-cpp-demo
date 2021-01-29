@@ -14,10 +14,16 @@
 #include "rtc_base/thread.h"
 
 using namespace vic::rtc;
+using namespace std;
 
 int main(int argc, char *argv[]) {
-    ::rtc::ThreadManager::Instance()->WrapCurrentThread();
+    auto thread = ::rtc::ThreadManager::Instance()->WrapCurrentThread();
     ThreadManager::instance()->init();
+
+    std::cout << "-----current thread: " << thread->name() << std::endl;
+    thread->PostTask(RTC_FROM_HERE, [](){
+        std::cout << "-----current thread is from post!!!!!!" << endl;
+    });
 
     QApplication app(argc, argv);
 
