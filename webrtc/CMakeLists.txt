@@ -3,7 +3,7 @@ project(WebRTC_lib)
 set(
         SOURCE_FILES
         ThreadManager.cpp
-        Singleton.h)
+        Singleton.h StatsReporter.cpp StatsReporter.h)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 

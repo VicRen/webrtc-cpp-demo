@@ -12,18 +12,31 @@
 #include "settings.h"
 #include "ThreadManager.h"
 #include "rtc_base/thread.h"
+#include "rtc_base/ssl_adapter.h"
+#include "rtc_base/physical_socket_server.h"
+#include "StatsReporter.h"
+#include "modules/utility/include/process_thread.h"
 
 using namespace vic::rtc;
 using namespace std;
 
+class CustomSocketServer : public rtc::PhysicalSocketServer {
+
+};
+
 int main(int argc, char *argv[]) {
-    auto thread = ::rtc::ThreadManager::Instance()->WrapCurrentThread();
+    rtc::InitializeSSL();
+
+    auto *socket_server = new CustomSocketServer;
+    auto *thread = new rtc::AutoSocketServerThread(socket_server);
+    rtc::ThreadManager::Instance()->SetCurrentThread(thread);
     ThreadManager::instance()->init();
 
-    std::cout << "-----current thread: " << thread->name() << std::endl;
-    thread->PostTask(RTC_FROM_HERE, [](){
-        std::cout << "-----current thread is from post!!!!!!" << endl;
-    });
+    StatsReporter statsReporter;
+
+    auto pThread = webrtc::ProcessThread::Create("StatsReporterThread");
+    pThread->RegisterModule(&statsReporter, RTC_FROM_HERE);
+    pThread->Start();
 
     QApplication app(argc, argv);
 
@@ -38,11 +51,6 @@ int main(int argc, char *argv[]) {
     QObject::connect(slider, &QSlider::valueChanged, spinBox, &QSpinBox::setValue);
 
     auto setting = new settings(window);
-
-    ::rtc::ThreadManager::Instance()->CurrentThread()->PostTask(RTC_FROM_HERE, [](){
-        std::cout << "------->Post Task-----> Current Thread: "
-                  << ::rtc::ThreadManager::Instance()->CurrentThread()->name() << std::endl;
-    });
     ThreadManager::instance()->thread(ThreadName::SERVICE)->PostTask(RTC_FROM_HERE, [setting]() {
         std::cout << "------->Post Task 0-----> Current Thread: "
                   << ::rtc::ThreadManager::Instance()->CurrentThread()->name() << std::endl;
@@ -59,6 +67,5 @@ int main(int argc, char *argv[]) {
     layout->addRow("button", button);
     window->setLayout(layout);
 //    window->show();
-
     return app.exec();
 }
