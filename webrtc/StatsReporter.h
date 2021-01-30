@@ -4,7 +4,7 @@
 #include "modules/include/module.h"
 
 class StatsReporter : public webrtc::Module {
-public:
+private:
     int64_t TimeUntilNextProcess() override;
 
     void Process() override;
